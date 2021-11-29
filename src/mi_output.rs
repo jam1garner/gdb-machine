@@ -35,6 +35,26 @@ pub enum ResultClass {
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum AsyncClass {
+    ThreadGroupAdded,
+    ThreadCreated,
+    ThreadExited,
+    RecordStarted,
+    RecordStopped,
+    ThreadGroupStarted,
+    ThreadGroupExited,
+    ThreadGroupRemoved,
+    TraceframeChanged,
+    TsvCreated,
+    TsvModified,
+    TsvDeleted,
+    BreakpointCreated,
+    BreakpointModified,
+    BreakpointDeleted,
+    ThreadSelected,
+    LibraryLoaded,
+    LibraryUnloaded,
+    CmdParamChanged,
+    MemoryChanged,
     Stopped,
 }
 

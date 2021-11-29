@@ -22,18 +22,25 @@ peg::parser! {
 
         rule string_character() -> char
             = character:$(
-                r#"\\"#
-                / r#"\'"#
-                / r#"\?"#
-                / r#"\a"#
-                / r#"\b"#
-                / (r#"\x"#  hex_digit() hex_digit())
-                / [^ '\\' | '"']
+                r#"\\"# /
+                r#"\'"# /
+                r#"\""# /
+                r#"\?"# /
+                r#"\a"# /
+                r#"\b"# /
+                r#"\f"# /
+                r#"\n"# /
+                r#"\r"# /
+                r#"\t"# /
+                r#"\v"# /
+                (r#"\x"#  hex_digit() hex_digit()) /
+                [^ '\\' | '"']
             )
         {
             match character {
                 r#"\\"# => '\\',
                 r#"\'"# => '\'',
+                r#"\""# => '"',
                 r#"\?"# => '?',
                 r#"\a"# => '\x07',
                 r#"\b"# => '\x08',
@@ -104,7 +111,27 @@ peg::parser! {
         }
 
         rule async_class() -> AsyncClass
-            = "stopped" { AsyncClass::Stopped }
+            = "thread-group-added" { AsyncClass::ThreadGroupAdded }
+            / "thread-created" { AsyncClass::ThreadCreated }
+            / "thread-selected" { AsyncClass::ThreadSelected }
+            / "thread-exited" { AsyncClass::ThreadExited }
+            / "record-started" { AsyncClass::RecordStarted }
+            / "record-stopped" { AsyncClass::RecordStopped }
+            / "thread-group-started" { AsyncClass::ThreadGroupStarted }
+            / "thread-group-exited" { AsyncClass::ThreadGroupExited }
+            / "thread-group-removed" { AsyncClass::ThreadGroupRemoved }
+            / "traceframe-changed" { AsyncClass::TraceframeChanged }
+            / "tsv-created" { AsyncClass::TsvCreated }
+            / "tsv-modified" { AsyncClass::TsvModified }
+            / "tsv-deleted" { AsyncClass::TsvDeleted }
+            / "breakpoint-created" { AsyncClass::BreakpointDeleted }
+            / "breakpoint-modified" { AsyncClass::BreakpointModified }
+            / "breakpoint-deleted" { AsyncClass::BreakpointDeleted }
+            / "library-loaded" { AsyncClass::LibraryLoaded }
+            / "library-unloaded" { AsyncClass::LibraryUnloaded }
+            / "cmd-param-changed" { AsyncClass::CmdParamChanged }
+            / "memory-changed" { AsyncClass::MemoryChanged }
+            / "stopped" { AsyncClass::Stopped }
 
         rule record_fields() -> HashMap<String, Value>
             = "," fields:result() ** ","
@@ -113,7 +140,7 @@ peg::parser! {
         }
 
         rule result_record() -> ResultRecord
-            = token:token()? "^" result_class:result_class() results:record_fields()? {
+            = token:token()? "^" result_class:result_class() results:record_fields()? nl() {
                 ResultRecord {
                     result_class,
                     results: results.unwrap_or_default(),
@@ -143,7 +170,7 @@ peg::parser! {
             / stream:stream_record() { OutOfBandRecord::Stream(stream) }
 
         pub(crate) rule output() -> Output
-            = out_of_band:out_of_band_record()* result:result_record()? nl() "(gdb)" nl() {
+            = out_of_band:out_of_band_record()* result:result_record()? /*nl()*/ "(gdb)" nl() {
                 Output { out_of_band, result }
             }
 
